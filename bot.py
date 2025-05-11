@@ -4,10 +4,13 @@ from telegram.ext import (
     ConversationHandler, ContextTypes
 )
 
-MENU, SUBMENU = range(2)
+MENU, SUBMENU1, SUBMENU2 = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    keyboard = [[InlineKeyboardButton("Go to Submenu", callback_data="submenu")]]
+    keyboard = [
+        [InlineKeyboardButton("Fruits", callback_data="submenu1")],
+        [InlineKeyboardButton("Animals", callback_data="submenu2")]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Main Menu", reply_markup=reply_markup)
     return MENU
@@ -15,26 +18,72 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    if query.data == "submenu":
-        keyboard = [[InlineKeyboardButton("Back", callback_data="back")]]
+    if query.data == "submenu1":
+        keyboard = [
+            [InlineKeyboardButton("Apple", callback_data="item_apple")],
+            [InlineKeyboardButton("Banana", callback_data="item_banana")],
+            [InlineKeyboardButton("Back", callback_data="back_main")]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(
-            text="Submenu Level",
+            text="Fruits Submenu",
             reply_markup=reply_markup
         )
-        return SUBMENU
+        return SUBMENU1
+    elif query.data == "submenu2":
+        keyboard = [
+            [InlineKeyboardButton("Cat", callback_data="item_cat")],
+            [InlineKeyboardButton("Dog", callback_data="item_dog")],
+            [InlineKeyboardButton("Back", callback_data="back_main")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            text="Animals Submenu",
+            reply_markup=reply_markup
+        )
+        return SUBMENU2
 
-async def submenu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def submenu1_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    if query.data == "back":
-        keyboard = [[InlineKeyboardButton("Go to Submenu", callback_data="submenu")]]
+    if query.data == "back_main":
+        keyboard = [
+            [InlineKeyboardButton("Fruits", callback_data="submenu1")],
+            [InlineKeyboardButton("Animals", callback_data="submenu2")]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(
             text="Main Menu",
             reply_markup=reply_markup
         )
         return MENU
+    elif query.data == "item_apple":
+        await query.answer(text="You selected Apple.")
+        return SUBMENU1
+    elif query.data == "item_banana":
+        await query.answer(text="You selected Banana.")
+        return SUBMENU1
+
+async def submenu2_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    if query.data == "back_main":
+        keyboard = [
+            [InlineKeyboardButton("Fruits", callback_data="submenu1")],
+            [InlineKeyboardButton("Animals", callback_data="submenu2")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(
+            text="Main Menu",
+            reply_markup=reply_markup
+        )
+        return MENU
+    elif query.data == "item_cat":
+        await query.answer(text="You selected Cat.")
+        return SUBMENU2
+    elif query.data == "item_dog":
+        await query.answer(text="You selected Dog.")
+        return SUBMENU2
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Goodbye.")
@@ -46,7 +95,8 @@ def main():
         entry_points=[CommandHandler("start", start)],
         states={
             MENU: [CallbackQueryHandler(menu_handler)],
-            SUBMENU: [CallbackQueryHandler(submenu_handler)],
+            SUBMENU1: [CallbackQueryHandler(submenu1_handler)],
+            SUBMENU2: [CallbackQueryHandler(submenu2_handler)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
